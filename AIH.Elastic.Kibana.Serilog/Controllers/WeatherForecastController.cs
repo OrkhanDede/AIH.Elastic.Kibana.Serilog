@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace AIH.Elastic.Kibana.Serilog.Controllers
 {
@@ -24,16 +25,32 @@ namespace AIH.Elastic.Kibana.Serilog.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<WeatherForecast> Get()
+        public IActionResult Get()
         {
-            var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            _logger.LogInformation("hey this is a request");
+            try
             {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = rng.Next(-20, 55),
-                Summary = Summaries[rng.Next(Summaries.Length)]
-            })
-            .ToArray();
+                var rng = new Random();
+                if (rng.Next(0, 5) > 2)
+                {
+                    throw new Exception("ops what happened?");
+                }
+                var result=Enumerable.Range(1, 5).Select(index => new WeatherForecast
+                    {
+                        Date = DateTime.Now.AddDays(index),
+                        TemperatureC = rng.Next(-20, 55),
+                        Summary = Summaries[rng.Next(Summaries.Length)]
+                    })
+                    .ToArray();
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e,"something bad happened");
+                return new StatusCodeResult(500);
+
+            }
+            
         }
     }
 }
